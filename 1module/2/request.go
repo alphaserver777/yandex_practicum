@@ -23,12 +23,18 @@ func mainPage(res http.ResponseWriter, req *http.Request) {
 	*/
 
 	body += "Query parameters ===============\r\n"
-	for k, v := range req.URL.Query() {
-		body += fmt.Sprintf("%s: %v\r\n", k, v)
+	if err := req.ParseForm(); err != nil {
+		res.Write([]byte(err.Error()))
+		return
 	}
+	/*
+		Это цикл for, который проходит по всем параметрам запроса.
+		req.URL.Query() — это метод, который возвращает карту (map) параметров запроса. Карта имеет тип map[string][]string, где:
+		Ключ (k) — это название параметра (например, name).
+		Значение (v) — это список строк (срез []string), так как параметр может иметь несколько значений.
+	*/
 	res.Write([]byte(body))
 }
-
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/`, mainPage)
