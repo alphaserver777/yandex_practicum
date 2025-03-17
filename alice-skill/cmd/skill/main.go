@@ -6,16 +6,22 @@ import (
 )
 
 func main() {
+	// Обрабатываем аргументы командной строки
+	parseFlags()
+
+	// Запускаем сервер
 	if err := run(); err != nil {
 		log.Fatalf("Ошибка при запуске сервера: %v", err)
 	}
 }
 
+// Функция для запуска сервера
 func run() error {
-	log.Println("Сервер запущен на http://localhost:8080")
-	return http.ListenAndServe(`:8080`, http.HandlerFunc(webhook))
+	log.Println("Сервер запущен на:", flagRunAddr)
+	return http.ListenAndServe(flagRunAddr, http.HandlerFunc(webhook))
 }
 
+// Обработчик вебхука
 func webhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)

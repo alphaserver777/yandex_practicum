@@ -1,3 +1,6 @@
+// go run 1module\flags\1\main.go --help
+// go run 1module\flags\1\main.go -file=<FILENAME>
+
 package main
 
 import (
