@@ -3,6 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"yandex_practicum/alice-skill/internal/logger"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -17,28 +20,30 @@ func main() {
 
 // Функция для запуска сервера
 func run() error {
-	log.Println("Сервер запущен на:", flagRunAddr)
-	return http.ListenAndServe(flagRunAddr, http.HandlerFunc(webhook))
+	if err := logger.Initialize(flagLogLevel); err != nil {
+		return err
+	}
+	logger.Log.Info("Running server", zap.String("address", flagRunAddr))
+	// оборачиваем хендлер webhook в middleware с логированием
+	return http.ListenAndServe(flagRunAddr, logger.RequestLogger(webhook))
 }
 
 // Обработчик вебхука
 func webhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		logger.Log.Debug("got request with bad method", zap.String("method", r.Method))
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(`{"error": "Разрешены только POST-запросы"}`))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write([]byte(`
+	_, _ = w.Write([]byte(`
       {
         "response": {
           "text": "Извините, я пока ничего не умею"
         },
-        "version": "1.0"
+        "version": "1.1 with logger"
       }
     `))
-	if err != nil {
-		log.Printf("Ошибка при отправке ответа: %v", err)
-	}
+	logger.Log.Debug("Sending HTTP 200 response")
 }

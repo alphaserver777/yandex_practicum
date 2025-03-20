@@ -2,19 +2,26 @@ package main
 
 import (
 	"flag"
-	"log"
+	"os"
 )
 
 // неэкспортированная переменная flagRunAddr содержит адрес и порт для запуска сервера
-var flagRunAddr string
+var (
+	flagRunAddr  string
+	flagLogLevel string
+)
 
 // parseFlags обрабатывает аргументы командной строки
 // и сохраняет их значения в соответствующих переменных
 func parseFlags() {
-	log.Print("Test work")
-	// регистрируем переменную flagRunAddr
-	// как аргумент -a со значением :8080 по умолчанию
-	flag.StringVar(&flagRunAddr, "a", ":8081", "address and port to run server")
-	// парсим переданные серверу аргументы в зарегистрированные переменные
+	flag.StringVar(&flagRunAddr, "a", ":8080", "addres and port to run server")
+	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.Parse()
+
+	if envRunAddr := os.Getenv("RUN_ADDR"); envRunAddr != "" {
+		flagRunAddr = envRunAddr
+	}
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		flagLogLevel = envLogLevel
+	}
 }
