@@ -4,11 +4,13 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 func main() {
 	// logLogrus("logrus.log")
-	// DifferentLevels()
+	// DifferentLevels(log.InfoLevel)
+	zapLoger()
 }
 
 func logLogrus(nameLogFile string) {
@@ -26,7 +28,7 @@ func logLogrus(nameLogFile string) {
 	// устанавливаем вывод логов в формате JSON
 	log.SetFormatter(&log.JSONFormatter{})
 	// устанавливаем уровень предупреждений
-	log.SetLevel(log.WarnLevel)
+	log.SetLevel(log.WarnLevel) // chose different LEVEL -> log.InfoLevel log.WarnLevel etc
 
 	// определяем стандартные поля JSON
 	log.WithFields(log.Fields{
@@ -45,6 +47,7 @@ func logLogrus(nameLogFile string) {
 	}).Fatal("Группа Linkin Park взяла паузу после смерти вокалиста Честера Беннингтона 20 июля 2017 года.")
 }
 
+// chose different LEVEL -> log.InfoLevel log.WarnLevel etc
 func DifferentLevels(level log.Level) {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(level)
@@ -71,5 +74,43 @@ func DifferentLevels(level log.Level) {
 		"genre": "rock",
 		"name":  "The Rasmus",
 	}).Fatal("Livin' in a World Without You")
+}
 
+func zapLoger() {
+	// добавляем предустановленный логер NewDevelopment
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		// вызываем панику, если ошибка
+		panic("cannot initialize zap")
+	}
+	// это нужно добавить, если логер буферизован
+	// в данном случае не буферизован, но привычка хорошая
+	defer logger.Sync()
+
+	// для примера берём простой URL
+	const url = "http://example.com"
+
+	// делаем логер SugaredLogger
+	sugar := logger.Sugar()
+
+	// выводим сообщение уровня Info с парой "url": url в виде JSON, это SugaredLogger
+	sugar.Infow(
+		"Failed to fetch URL",
+		"url", url,
+	)
+
+	// выводим сообщение уровня Info, но со строкой URL, это тоже SugaredLogger
+	sugar.Infof("Failed to fetch URL: %s", url)
+	// выводим сообщение уровня Error со строкой URL, и это SugaredLogger
+	sugar.Errorf("Failed to fetch URL: %s", url)
+
+	// переводим в обычный Logger
+	plain := sugar.Desugar()
+
+	// выводим сообщение уровня Info обычного регистратора (не SugaredLogger)
+	plain.Info("Hello, Go!")
+	// также уровня Warn (не SugaredLogger)
+	plain.Warn("Simple warning")
+	// и уровня Error, но добавляем строго типизированное поле "url" (не SugaredLogger)
+	plain.Error("Failed to fetch URL", zap.String("url", url))
 }
