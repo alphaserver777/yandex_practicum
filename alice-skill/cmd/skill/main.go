@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"yandex_practicum/alice-skill/internal/flags"
 	"yandex_practicum/alice-skill/internal/logger"
 
 	"go.uber.org/zap"
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	// Обрабатываем аргументы командной строки
-	parseFlags()
+	flags.ParseFlags()
 
 	// Запускаем сервер
 	if err := run(); err != nil {
@@ -20,12 +21,12 @@ func main() {
 
 // Функция для запуска сервера
 func run() error {
-	if err := logger.Initialize(flagLogLevel); err != nil {
+	if err := logger.Initialize(flags.FlagLogLevel); err != nil {
 		return err
 	}
-	logger.Log.Info("Running server", zap.String("address", flagRunAddr))
+	logger.Log.Info("Running server", zap.String("address", flags.FlagRunAddr))
 	// оборачиваем хендлер webhook в middleware с логированием
-	return http.ListenAndServe(flagRunAddr, logger.RequestLogger(webhook))
+	return http.ListenAndServe(flags.FlagRunAddr, logger.RequestLogger(webhook))
 }
 
 // Обработчик вебхука
