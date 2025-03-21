@@ -1,6 +1,9 @@
 package main
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 const MockXMLDocument = `
 <report>
@@ -34,7 +37,11 @@ const MockXMLDocument = `
 `
 
 func main() {
-	FilterXML(MockXMLDocument, 50)
+	output, err := FilterXML(MockXMLDocument, 50)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(output)
 }
 
 type (
@@ -47,11 +54,11 @@ type (
 
 	RacerResult struct {
 		XMLName   xml.Name `xml:"racer"`
-		GlobalId  int      `xml:"global_id,attr,omitempty"`
+		GlobalId  *int     `xml:"global_id,attr,omitempty"` // Сделали указателем, чтобы отличать "0" от "не указан"
 		Nick      string   `xml:"nick"`
 		BestLapMs int64    `xml:"best_lap_ms"`
 		Laps      float32  `xml:"laps"`
-		Comment   string   `xml:",comment"`
+		Comment   string   `xml:",omitempty"` // Добавили omitempty
 	}
 )
 
@@ -64,6 +71,7 @@ func FilterXML(input string, laps float32) (output string, err error) {
 	if err != nil {
 		return
 	}
+
 	// создаём новый список гонщиков
 	filter := make([]RacerResult, 0, len(rp.Results))
 	for _, racer := range rp.Results {
@@ -73,7 +81,7 @@ func FilterXML(input string, laps float32) (output string, err error) {
 	}
 	rp.Results = filter
 
-	// сериализуем данные в XML c оступами
+	// сериализуем данные в XML с отступами
 	var data []byte
 	data, err = xml.MarshalIndent(rp, "", "   ")
 	if err != nil {
