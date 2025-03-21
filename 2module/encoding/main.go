@@ -65,13 +65,13 @@ const (
 
 func main() {
 	// validData()
-	go func() {
-		time.Sleep(time.Second)
-		http.Post(`http://localhost:8080`, `application/json`,
-			// ключи указаны в разных регистрах, но данные сконвертируются правильно
-			bytes.NewBufferString(`{"ID": 10, "NaMe": "Gopher", "company": "Don't Panic"}`))
-	}()
-	http.ListenAndServe("localhost:8080", http.HandlerFunc(JSONHandler)) // "C:\Program Files\Git\mingw64\bin\curl.exe" --include localhost:8080/?id=1
+	// go func() {
+	// 	time.Sleep(time.Second)
+	// 	http.Post(`http://localhost:8080`, `application/json`,
+	// 		// ключи указаны в разных регистрах, но данные сконвертируются правильно
+	// 		bytes.NewBufferString(`{"ID": 10, "NaMe": "Gopher", "company": "Don't Panic"}`))
+	// }()
+	http.ListenAndServe("localhost:8080", http.HandlerFunc(JSONHanderDecode)) // "C:\Program Files\Git\mingw64\bin\curl.exe" --include localhost:8080/?id=1
 	// task1()
 }
 
@@ -108,6 +108,24 @@ func JSONHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
+}
+
+func JSONHanderDecode(w http.ResponseWriter, req *http.Request) {
+	var id string
+	if req.Method == http.MethodPost {
+		var visitor Visitor
+
+		if err := json.NewDecoder(req.Body).Decode(&visitor); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		id = strconv.Itoa(visitor.ID)
+		visitors[id] = visitor
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id))
 }
 
 func JSONPostData(w http.ResponseWriter, req *http.Request) {
